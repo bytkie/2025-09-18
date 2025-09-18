@@ -1,0 +1,27 @@
+name: Send Email on Push
+
+on:
+  push:
+    branches:
+      - main   # или укажи ветку, на которую хочешь реагировать
+
+jobs:
+  send_mail:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send email on push
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "New push in repository ${{ github.repository }}"
+          body: |
+            Repository: ${{ github.repository }}
+            Pusher: ${{ github.event.pusher.name }}
+            Commit message: ${{ github.event.head_commit.message }}
+          to: your.email@example.com       # укажи email получателя
+          from: ${{ secrets.MAIL_USERNAME }}
+          secure: true
