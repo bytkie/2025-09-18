@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GitHub API: Profiili andmete päring</title>
+    <style>
+        /* Общие стили */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9fafb;
+            color: #333;
+            margin: 0;
+            padding: 0 20px 40px 20px;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: #0d47a1;
+            padding: 30px 20px;
+            text-align: center;
+            color: #fff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 2.5rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h2 {
+            font-size: 2rem;
+            color: #0d47a1;
+            border-bottom: 3px solid #0d47a1;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        strong {
+            color: #0d47a1;
+            background-color: #e8f0fe;
+            padding: 3px 7px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 600;
+        }
+
+        a {
+            color: #0d47a1;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        pre {
+            background-color: #e8f0fe;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 600;
+            overflow-x: auto;
+            box-shadow: 0 2px 5px rgba(13, 71, 161, 0.1);
+            margin-bottom: 30px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+            border-radius: 6px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        ul.instructions {
+            list-style: inside disc;
+            padding-left: 0;
+            font-size: 1rem;
+            color: #222;
+        }
+
+        ul.instructions li {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>GitHub API andmete kasutamine</h1>
+    </header>
+
+    <div class="container">
+        <h2>Harjutus: GitHub kasutajaprofiili andmete pärimine</h2>
+
+        <p>Selles harjutuses õpid, kuidas kasutada GitHubi avalikku REST API-t, et pärida kasutajaprofiili andmeid.</p>
+
+        <p>API dokumentatsioon on saadaval <a href="https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api?apiVersion=2022-11-28" target="_blank" rel="noopener noreferrer">siin</a>.</p>
+
+        <h3>Juhised</h3>
+        <ul class="instructions">
+            <li>Loo uus Vanilla JavaScript projekt CodeSandboxis või Visual Studio Code.</li>
+            <li>Kopeeri järgmine kood oma <strong>index.mjs</strong> faili:</li>
+        </ul>
+
+        <pre>
+            let givenProfile = "";
+let profileName = "";
+let profileId = "";
+let profileLink = "";
+let profileRepos = "";
+let profileFollowers = "";
+let profileFollowing = "";
+
+// Функция отрисовки страницы
+function renderPage() {
+  document.getElementById("app").innerHTML = `
+    <div>
+      <h1>Github profile viewer</h1>
+      <p>Please enter profile name: </p>
+      <input value="${givenProfile}" placeholder="Enter GitHub username" />
+      <div class="content">
+        <h1 id="name">Name: ${profileName ? profileName : "-"}</h1>
+        <p id="id">Id: ${profileId ? profileId : "-"}</p>
+        <p id="repos">Public repos: ${profileRepos ? profileRepos : "-"}</p>
+        <p id="followers">Followers: ${
+          profileFollowers ? profileFollowers : "-"
+        }</p>
+        <p id="following">Following: ${
+          profileFollowing ? profileFollowing : "-"
+        }</p>
+        <p id="profileurl">Link: ${
+          profileLink && profileName
+            ? `<a href="${profileLink}" target="_blank">${profileLink}</a>`
+            : "-"
+        }</p>
+      </div>
+    </div>
+  `;
+  // После перерисовки обязательно снова добавляем обработчик на input!
+  const input = document.querySelector("input");
+  input.addEventListener("change", updateValue);
+}
+
+// Функция обработки ввода
+function updateValue(e) {
+  givenProfile = e.target.value;
+  fetchProfile();
+}
+
+// Функция запроса профиля с GitHub
+async function fetchProfile() {
+  if (!givenProfile) {
+    profileName = "";
+    profileId = "";
+    profileLink = "";
+    profileRepos = "";
+    profileFollowers = "";
+    profileFollowing = "";
+    renderPage();
+    return;
+  }
+  try {
+    const response = await fetch(
+      `https://api.github.com/users/${givenProfile}`
+    );
+    if (!response.ok) {
+      profileName = "User not found";
+      profileId = "-";
+      profileLink = "";
+      profileRepos = "-";
+      profileFollowers = "-";
+      profileFollowing = "-";
+    } else {
+      const data = await response.json();
+      profileName = data.login || "-";
+      profileId = data.id || "-";
+      profileLink = data.html_url || "";
+      profileRepos = data.public_repos || "-";
+      profileFollowers = data.followers || "-";
+      profileFollowing = data.following || "-";
+    }
+    renderPage();
+  } catch (e) {
+    profileName = "Error";
+    profileId = "-";
+    profileLink = "";
+    profileRepos = "-";
+    profileFollowers = "-";
+    profileFollowing = "-";
+    renderPage();
+  }
+}
+
+// Первичная отрисовка
+renderPage();
+
+        </pre>
+
+        <ul class="instructions">
+            <li>Tee <strong>fetch</strong> päring GitHubi kasutaja API-le. Võid vaadata <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch" target="_blank" rel="noopener noreferrer">MDN fetch näidet</a>.</li>
+            <li>Proovi pärida konkreetse GitHub kasutaja profiili (nt <code>bytkie</code> või oma kasutajanimi).</li>
+        </ul>
+
+        <p>Kui profiil leitakse, kuvatakse selle kasutajanimi, ID, avalike repode arv, jälgijate arv, jälgitavate arv ja link profiilile.</p>
+
+        <img src="img/git.png" alt="GitHub API päringu tulemus" />
+
+        <h3>Kokkuvõte</h3>
+        <p>Selles harjutuses said tutvuda GitHubi avaliku API kasutamisega ning õppisid, kuidas pärida ja kuvada kasutajaprofiili andmeid JavaScripti abil.</p>
+    </div>
+</body>
+</html>
